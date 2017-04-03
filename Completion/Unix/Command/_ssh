@@ -665,7 +665,7 @@ _ssh_users () {
 _ssh_hosts () {
   local -a config_hosts
   local -a config
-  local config_file
+  local config_file key args host cfgfile
   integer cnt
   integer ind
 
@@ -689,24 +689,23 @@ _ssh_hosts () {
   do
     config_file=${config[cnt]}
     if [[ -r "$config_file" ]]; then
-      local key args host cfgfile
       while IFS=$'=\t ' read -r key args; do
         if [[ "$key" == (#i)host ]]; then
-           for host in ${(z)args}; do
-              case $host in
-              (*[*?]*) ;;
-              (*) config_hosts+=("$host");;
-              esac
-           done
+        for host in ${(z)args}; do
+           case $host in
+           (*[*?]*) ;;
+           (*) config_hosts+=("$host");;
+           esac
+        done
         fi
         # if we find a "include" command, add the referenced file(s) to our array and parse the files later on
         if [[ "$key" == (#i)include ]]; then
-           for cfgfile in ${(z)args}; do
-             cfgfile=${~cfgfile} # evaluate glob patterns like "~"
-             if [[ -r "$cfgfile" ]]; then
+          for cfgfile in ${(z)args}; do
+            cfgfile=$~cfgfile
+            if [[ -r "$cfgfile" ]]; then
               config+=("$cfgfile")
-             fi
-         done
+            fi
+          done
         fi
       done < "$config_file"
     fi
